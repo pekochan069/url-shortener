@@ -25,7 +25,6 @@ export async function GET({ params }: APIEvent) {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "s-maxage=1000000000, stale-while-revalidate",
     },
   });
 }

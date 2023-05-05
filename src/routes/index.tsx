@@ -1,13 +1,15 @@
 import { type VoidComponent } from "solid-js";
-import { createSignal, Match, Switch } from "solid-js";
+import { createEffect, createSignal, Match, Switch } from "solid-js";
 import { trpc } from "~/utils/trpc";
 import { createNewSlug } from "~/utils/createSlug";
 import CopyIcon from "~/components/copy";
+import { create } from "domain";
 
 const Home: VoidComponent = () => {
   const SLUG_LENGTH = 12;
   const [url, setUrl] = createSignal("");
   const [slug, setSlug] = createSignal("");
+  const [shouldCreateShortLink, setShouldCreateShortLink] = createSignal(false);
   const shortLink = () => `${location.origin}/${slug()}`;
 
   const createShortLink = trpc.query.createShortLink.useMutation();
@@ -21,6 +23,7 @@ const Home: VoidComponent = () => {
 
   const onFormSubmit = (e: Event) => {
     e.preventDefault();
+    setShouldCreateShortLink(false);
 
     if (url() === "") {
       return;
@@ -28,24 +31,23 @@ const Home: VoidComponent = () => {
 
     createShortLink.reset();
 
-    setSlug(createNewSlug(SLUG_LENGTH));
+    setSlug(createNewSlug(SLUG_LENGTH));// 
+  };
 
-    while (true) {
-      if (checkSlug.isLoading) {
-        continue;
-      }
-
-      if (!checkSlug.data?.exists) {
-        break;
-      }
-
-      setSlug(createNewSlug(SLUG_LENGTH));
+  createEffect(() => {
+    if (slug() === "" || url() === "") {
+      return;
     }
 
-    console.log(slug());
-    createShortLink.mutate({ url: url(), slug: slug() });
-    console.log(createShortLink.data);
-  };
+    setShouldCreateShortLink(true);
+  });
+
+  createEffect(() => {
+    if (shouldCreateShortLink()) {
+      createShortLink.mutate({ url: url(), slug: slug() });
+      setShouldCreateShortLink(false);
+    }
+  });
 
   return (
     <div class="grid min-h-screen w-full place-items-center bg-slate-300 md:bg-none">
