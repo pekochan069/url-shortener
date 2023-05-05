@@ -32,7 +32,7 @@ This will start a production server on port `3000`.
   vercel build --prod
 ```
   
-### Deploying 
+### Deploying
 
 ```bash
 vercel deploy --prod --prebuilt
