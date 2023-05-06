@@ -29,13 +29,13 @@ This will start a production server on port `3000`.
 ### Building
 
 ```bash
-  vercel build --prod
+yarn vercel build --prod
 ```
   
 ### Deploying
 
 ```bash
-vercel deploy --prod --prebuilt
+yarn vercel deploy --prod --prebuilt
 ```
 
 ### Enviroment Variables
