@@ -1,53 +1,31 @@
 import { type VoidComponent } from "solid-js";
 import { createEffect, createSignal, Match, Switch } from "solid-js";
 import { trpc } from "~/utils/trpc";
-import { createNewSlug } from "~/utils/createSlug";
 import CopyIcon from "~/components/copy";
-import { create } from "domain";
 
 const Home: VoidComponent = () => {
-  const SLUG_LENGTH = 12;
   const [url, setUrl] = createSignal("");
   const [slug, setSlug] = createSignal("");
-  const [shouldCreateShortLink, setShouldCreateShortLink] = createSignal(false);
   const shortLink = () => `${location.origin}/${slug()}`;
 
   const createShortLink = trpc.query.createShortLink.useMutation();
-  const checkSlug = trpc.query.checkSlug.useQuery(
-    () => ({ slug: slug() }),
-    () => ({
-      refetchOnReconnect: false,
-      refetchOnWindowFocus: false,
-    })
-  );
 
   const onFormSubmit = (e: Event) => {
     e.preventDefault();
-    setShouldCreateShortLink(false);
 
     if (url() === "") {
       return;
     }
 
+    let tmpUrl = url();
+    tmpUrl = tmpUrl.replace(/\/$/, "");
+
     createShortLink.reset();
 
-    setSlug(createNewSlug(SLUG_LENGTH));// 
+    createShortLink.mutateAsync({ url: tmpUrl }).then((data) => {
+      setSlug(data.slug);
+    });
   };
-
-  createEffect(() => {
-    if (slug() === "" || url() === "") {
-      return;
-    }
-
-    setShouldCreateShortLink(true);
-  });
-
-  createEffect(() => {
-    if (shouldCreateShortLink()) {
-      createShortLink.mutate({ url: url(), slug: slug() });
-      setShouldCreateShortLink(false);
-    }
-  });
 
   return (
     <div class="grid min-h-screen w-full place-items-center bg-slate-300 md:bg-none">
@@ -103,7 +81,7 @@ const Home: VoidComponent = () => {
                       {shortLink()}
                     </h1>
                     <button
-                      class="delay-8 transform rounded-lg bg-white p-1 text-black outline-none transition hover:-translate-y-0.5 focus:ring-1 focus:ring-gray-900/50 focus:ring-offset-2 active:bg-gray-300"
+                      class="delay-8 transform rounded-lg bg-white p-1 text-black outline-none transition hover:-translate-y-0.5 focus:ring-1 focus:ring-gray-900/30 focus:ring-offset-2 active:bg-gray-300"
                       onClick={() => navigator.clipboard.writeText(shortLink())}
                     >
                       <CopyIcon />
