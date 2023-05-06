@@ -1,5 +1,5 @@
 import { type VoidComponent } from "solid-js";
-import { createEffect, createSignal, Match, Switch } from "solid-js";
+import { createSignal, Match, Switch } from "solid-js";
 import { trpc } from "~/utils/trpc";
 import CopyIcon from "~/components/copy";
 
