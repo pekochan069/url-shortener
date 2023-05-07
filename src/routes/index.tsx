@@ -1,11 +1,20 @@
 import { type VoidComponent } from "solid-js";
-import { createSignal, Match, Switch } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  Match,
+  Show,
+  Switch,
+  untrack,
+} from "solid-js";
 import { trpc } from "~/utils/trpc";
 import CopyIcon from "~/components/copy";
 
 const Home: VoidComponent = () => {
   const [url, setUrl] = createSignal("");
   const [slug, setSlug] = createSignal("");
+  const [counter, setCounter] = createSignal(0);
+  const [timer, setTimer] = createSignal<NodeJS.Timeout>();
   const shortLink = () => `${location.origin}/${slug()}`;
 
   const createShortLink = trpc.query.createShortLink.useMutation();
@@ -27,10 +36,24 @@ const Home: VoidComponent = () => {
     });
   };
 
+  createEffect(() => {
+    if (untrack(timer)) {
+      clearTimeout(untrack(timer));
+    }
+
+    if (counter() > 0) {
+      const currentTimer = setTimeout(() => {
+        setCounter(counter() - 1);
+      }, 1000);
+
+      setTimer(currentTimer);
+    }
+  });
+
   return (
     <div class="grid min-h-screen w-full place-items-center bg-slate-300 md:bg-none">
       <main class="container mx-auto grid place-items-center gap-10 px-2">
-        <div class="bg:none w-full max-w-3xl rounded-lg md:bg-slate-200 md:px-20 md:py-5">
+        <div class="bg:none w-full max-w-3xl rounded-lg md:bg-slate-200 md:px-20 md:py-7">
           <form
             onSubmit={(e) => {
               onFormSubmit(e);
@@ -65,12 +88,12 @@ const Home: VoidComponent = () => {
               </button>
             </div>
           </form>
-          <hr class="h-3px my-8 bg-slate-900/20 md:my-12" />
-          <div class="h-30 flex w-full flex-col">
-            <h3 class="text-center text-3xl font-thin md:text-3xl">
+          <hr class="h-3px mb-4 mt-8 bg-slate-900/20 md:mb-6 md:mt-12" />
+          <div class="h-30 flex w-full flex-col gap-5">
+            <h3 class="text-center text-3xl font-thin md:text-4xl">
               Shortened URL
             </h3>
-            <div class="grid flex-1 place-items-center">
+            <div class="flex flex-1 flex-col items-center gap-2">
               <Switch>
                 <Match when={createShortLink.isPending}>
                   <p class="text-center text-lg md:text-2xl">...</p>
@@ -82,13 +105,19 @@ const Home: VoidComponent = () => {
                     </h1>
                     <button
                       class="delay-8 transform rounded-lg bg-white p-1 text-black outline-none transition hover:-translate-y-0.5 focus:ring-1 focus:ring-gray-900/30 focus:ring-offset-2 active:bg-gray-300"
-                      onClick={() => navigator.clipboard.writeText(shortLink())}
+                      onClick={() => {
+                        navigator.clipboard.writeText(shortLink());
+                        setCounter(3);
+                      }}
                     >
                       <CopyIcon />
                     </button>
                   </div>
                 </Match>
               </Switch>
+              <Show when={counter() > 0}>
+                <p class="text-sm text-slate-600">Copied to clipboard!</p>
+              </Show>
             </div>
           </div>
         </div>
